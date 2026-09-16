@@ -34,11 +34,9 @@ const coverflow = document.querySelector('.coverflow');
 const coverflowCards = [...document.querySelectorAll('[data-card]')];
 const coverflowPrevious = document.querySelector('[data-coverflow-previous]');
 const coverflowNext = document.querySelector('[data-coverflow-next]');
-const coverflowCurrent = document.querySelector('[data-coverflow-current]');
-const coverflowTotal = document.querySelector('[data-coverflow-total]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-if (coverflow && coverflowCards.length && coverflowPrevious && coverflowNext && coverflowCurrent && coverflowTotal) {
+if (coverflow && coverflowCards.length && coverflowPrevious && coverflowNext) {
   let activeCard = 0;
   let autoplay;
   let pointerStart = null;
@@ -52,23 +50,21 @@ if (coverflow && coverflowCards.length && coverflowPrevious && coverflowNext && 
   }
 
   function paintCoverflow() {
-    const spacing = Math.min(window.innerWidth * 0.25, 380);
+    const spacing = Math.min(window.innerWidth * 0.21, 310);
     coverflowCards.forEach((card, index) => {
       const distance = distanceFromActive(index);
-      const visible = Math.abs(distance) <= 3;
-      const depth = Math.max(0, 170 - Math.abs(distance) * 66);
-      const scale = Math.max(.74, 1 - Math.abs(distance) * .09);
+      const visible = Math.abs(distance) <= 2;
+      const depth = Math.max(0, 140 - Math.abs(distance) * 58);
+      const scale = Math.max(.78, 1 - Math.abs(distance) * .1);
       card.style.transform = `translateX(${distance * spacing}px) translateZ(${depth}px) rotateY(${-distance * 18}deg) scale(${scale})`;
-      card.style.opacity = visible ? String(Math.max(.18, 1 - Math.abs(distance) * .26)) : '0';
-      card.style.filter = distance === 0 ? 'none' : 'brightness(.8)';
+      card.style.opacity = visible ? String(Math.max(.3, 1 - Math.abs(distance) * .24)) : '0';
+      card.style.filter = distance === 0 ? 'none' : 'brightness(.82) saturate(.82)';
       card.style.pointerEvents = visible ? 'auto' : 'none';
       card.style.zIndex = String(20 - Math.abs(distance));
       card.dataset.active = String(distance === 0);
       card.tabIndex = distance === 0 ? 0 : -1;
       card.setAttribute('aria-hidden', String(!visible));
     });
-    coverflowCurrent.textContent = String(activeCard + 1);
-    coverflowTotal.textContent = String(coverflowCards.length);
   }
 
   function goTo(nextIndex, userInitiated = false) {
