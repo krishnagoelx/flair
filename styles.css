@@ -85,3 +85,6 @@ section[id]{scroll-margin-top:96px}
 .site-header,.hero-copy{font-family:"Brockmann","Manrope",system-ui,sans-serif}.hero-copy h1{font-weight:500;letter-spacing:-.036em}.hero-copy>p{font-weight:400;letter-spacing:-.006em}.usecase-card{width:clamp(224px,20vw,320px);height:auto;aspect-ratio:4 / 5;margin-left:calc(clamp(224px,20vw,320px) / -2)}.coverflow-track{height:410px}.usecase-card img{filter:none}.card-copy h2{font-size:clamp(22px,1.45vw,26px);line-height:1.08;letter-spacing:-.03em}.card-copy span{line-height:1.45}.coverflow[data-dragging="true"] .usecase-card{aspect-ratio:4 / 5}
 @media(max-width:800px){.usecase-card{width:232px;height:auto;aspect-ratio:4 / 5;margin-left:-116px}.coverflow-track{height:310px}}
 @media(max-width:500px){.usecase-card{width:212px;height:auto;aspect-ratio:4 / 5;margin-left:-106px}.coverflow-track{height:285px}}
+
+/* Stronger coverflow depth: one card leads, the rest sit behind it in a stack. */
+.coverflow{z-index:1}.coverflow-track{perspective:920px;transform-style:preserve-3d}.usecase-card{box-shadow:0 22px 45px rgba(0,0,0,.18);backface-visibility:hidden}.usecase-card[data-active="true"]{box-shadow:0 30px 60px rgba(0,0,0,.24)}.coverflow[data-hover-direction="forward"]{cursor:e-resize}.coverflow[data-hover-direction="backward"]{cursor:w-resize}

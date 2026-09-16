@@ -39,6 +39,14 @@ if (coverflow && coverflowCards.length) {
   let autoplay;
   let dragOffset = 0;
   let dragState = null;
+  let hoverDirection = 0;
+  let lastPointerX = null;
+
+  function cardSpacing() {
+    return window.innerWidth < 800
+      ? Math.min(window.innerWidth * .43, 194)
+      : Math.min(window.innerWidth * .22, 300);
+  }
 
   function distanceFromActive(index) {
     let distance = index - activeCard;
@@ -50,17 +58,19 @@ if (coverflow && coverflowCards.length) {
 
   function paintCoverflow() {
     const compact = window.innerWidth < 800;
-    const spacing = compact ? Math.min(window.innerWidth * .42, 220) : Math.min(window.innerWidth * .21, 310);
+    const spacing = cardSpacing();
     coverflowCards.forEach((card, index) => {
       const distance = distanceFromActive(index) + dragOffset / spacing;
-      const visible = Math.abs(distance) <= (compact ? 1 : 2);
-      const depth = Math.max(0, 140 - Math.abs(distance) * 58);
-      const scale = Math.max(.78, 1 - Math.abs(distance) * .1);
-      card.style.transform = `translateX(${distance * spacing}px) translateZ(${depth}px) rotateY(${-distance * 18}deg) scale(${scale})`;
-      card.style.opacity = visible ? String(Math.max(.3, 1 - Math.abs(distance) * .24)) : '0';
+      const magnitude = Math.abs(distance);
+      const visible = magnitude <= (compact ? 1 : 3);
+      const depth = magnitude < .01 ? 155 : -54 - (magnitude - 1) * 118;
+      const scale = magnitude < .01 ? 1 : Math.max(.68, 1 - magnitude * .12);
+      const tilt = compact ? 22 : 22;
+      card.style.transform = `translateX(${distance * spacing}px) translateY(${Math.min(magnitude * 12, 36)}px) translateZ(${depth}px) rotateY(${-distance * tilt}deg) scale(${scale})`;
+      card.style.opacity = visible ? String(Math.max(.26, 1 - magnitude * .2)) : '0';
       card.style.filter = 'none';
       card.style.pointerEvents = visible ? 'auto' : 'none';
-      card.style.zIndex = String(20 - Math.abs(distance));
+      card.style.zIndex = String(30 - Math.ceil(magnitude));
       card.dataset.active = String(distance === 0);
       card.tabIndex = distance === 0 ? 0 : -1;
       card.setAttribute('aria-hidden', String(!visible));
@@ -82,16 +92,41 @@ if (coverflow && coverflowCards.length) {
 
   function startAutoplay() {
     pauseAutoplay();
+    hoverDirection = 0;
+    delete coverflow.dataset.hoverDirection;
     if (!prefersReducedMotion.matches) {
       autoplay = window.setInterval(() => goTo(activeCard + 1), 3600);
     }
   }
 
-  coverflowCards.forEach((card, index) => {
-    card.addEventListener('pointerenter', () => {
-      if (!dragState) goTo(index, { pause: true });
-    });
-  });
+  function setHoverDirection(direction) {
+    if (direction === hoverDirection || dragState) return;
+    hoverDirection = direction;
+    pauseAutoplay();
+    if (!direction || prefersReducedMotion.matches) {
+      delete coverflow.dataset.hoverDirection;
+      return;
+    }
+    coverflow.dataset.hoverDirection = direction > 0 ? 'forward' : 'backward';
+    autoplay = window.setInterval(() => goTo(activeCard + direction), 1050);
+  }
+
+  function steerFromPointer(clientX) {
+    if (typeof clientX !== 'number') return;
+    lastPointerX = clientX;
+    const bounds = coverflow.getBoundingClientRect();
+    const position = (clientX - bounds.left) / bounds.width;
+    setHoverDirection(position < .34 ? -1 : position > .66 ? 1 : 0);
+  }
+
+  function resumeMotion() {
+    if (lastPointerX !== null) {
+      hoverDirection = 0;
+      steerFromPointer(lastPointerX);
+    }
+    if (!hoverDirection) startAutoplay();
+  }
+
   coverflow.addEventListener('keydown', event => {
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
@@ -107,10 +142,15 @@ if (coverflow && coverflowCards.length) {
     dragState = { startX: event.clientX, lastX: event.clientX, lastTime: performance.now(), velocity: 0 };
     coverflow.setPointerCapture(event.pointerId);
     coverflow.dataset.dragging = 'true';
+    hoverDirection = 0;
+    delete coverflow.dataset.hoverDirection;
     pauseAutoplay();
   });
   coverflow.addEventListener('pointermove', event => {
-    if (!dragState) return;
+    if (!dragState) {
+      steerFromPointer(event.clientX);
+      return;
+    }
     const now = performance.now();
     const elapsed = Math.max(1, now - dragState.lastTime);
     dragState.velocity = (event.clientX - dragState.lastX) / elapsed;
@@ -121,7 +161,7 @@ if (coverflow && coverflowCards.length) {
   });
   coverflow.addEventListener('pointerup', event => {
     if (!dragState) return;
-    const spacing = window.innerWidth < 800 ? Math.min(window.innerWidth * .42, 220) : Math.min(window.innerWidth * .21, 310);
+    const spacing = cardSpacing();
     const dragSteps = Math.round(-dragOffset / spacing);
     const momentumStep = Math.abs(dragState.velocity) > .32 ? (dragState.velocity < 0 ? 1 : -1) : 0;
     activeCard = (activeCard + (momentumStep || dragSteps) + coverflowCards.length) % coverflowCards.length;
@@ -129,16 +169,16 @@ if (coverflow && coverflowCards.length) {
     dragState = null;
     delete coverflow.dataset.dragging;
     paintCoverflow();
-    window.setTimeout(startAutoplay, 900);
+    window.setTimeout(resumeMotion, 500);
   });
   coverflow.addEventListener('pointercancel', () => {
     dragOffset = 0;
     dragState = null;
     delete coverflow.dataset.dragging;
     paintCoverflow();
-    window.setTimeout(startAutoplay, 900);
+    window.setTimeout(resumeMotion, 500);
   });
-  coverflow.addEventListener('mouseenter', pauseAutoplay);
+  coverflow.addEventListener('pointerenter', event => steerFromPointer(event.clientX));
   coverflow.addEventListener('mouseleave', startAutoplay);
   coverflow.addEventListener('focusin', pauseAutoplay);
   coverflow.addEventListener('focusout', event => {
