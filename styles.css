@@ -1,3 +1,6 @@
+@font-face{font-family:"Brockmann";font-style:normal;font-weight:400;src:url("https://assets.emergent.sh/assets/fonts/brockmann/Brockmann-Regular.otf") format("opentype");font-display:swap}
+@font-face{font-family:"Brockmann";font-style:normal;font-weight:500;src:url("https://assets.emergent.sh/assets/fonts/brockmann/Brockmann-Medium.otf") format("opentype");font-display:swap}
+@font-face{font-family:"Brockmann";font-style:normal;font-weight:600;src:url("https://assets.emergent.sh/assets/fonts/brockmann/Brockmann-SemiBold.otf") format("opentype");font-display:swap}
 :root{--paper:#f8f8f5;--ink:#17223a;--muted:#5c6475;--blue:#3e51e8;--sky:#dde6ff;--lime:#d9f27b;--line:#d9dde5;--white:#fff;--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -77,3 +80,8 @@ h1,h2,h3{text-wrap:balance}
 @media(max-width:800px){main{padding-top:69px}.site-header .header-inner{height:69px}.desktop-nav{padding:0;border:0;background:transparent}.hero-copy{width:min(100% - 36px,650px)}.hero-copy h1{white-space:normal;font-size:clamp(42px,8.3vw,57px);letter-spacing:-.045em}.hero-copy>p{font-size:16px;letter-spacing:-.008em}.coverflow-track{height:292px}.usecase-card{width:238px;height:276px;margin-left:-119px}.card-copy h2{font-size:22px}}
 @media(max-width:500px){.hero-copy h1{font-size:clamp(37px,10vw,46px)}.coverflow-track{height:274px}.usecase-card{width:218px;height:258px;margin-left:-109px}.card-copy{padding:16px}.card-copy h2{font-size:20px}.card-copy span{font-size:10px}}
 section[id]{scroll-margin-top:96px}
+
+/* One stable portrait card ratio across the gallery, independent of its position. */
+.site-header,.hero-copy{font-family:"Brockmann","Manrope",system-ui,sans-serif}.hero-copy h1{font-weight:500;letter-spacing:-.036em}.hero-copy>p{font-weight:400;letter-spacing:-.006em}.usecase-card{width:clamp(224px,20vw,320px);height:auto;aspect-ratio:4 / 5;margin-left:calc(clamp(224px,20vw,320px) / -2)}.coverflow-track{height:410px}.usecase-card img{filter:none}.card-copy h2{font-size:clamp(22px,1.45vw,26px);line-height:1.08;letter-spacing:-.03em}.card-copy span{line-height:1.45}.coverflow[data-dragging="true"] .usecase-card{aspect-ratio:4 / 5}
+@media(max-width:800px){.usecase-card{width:232px;height:auto;aspect-ratio:4 / 5;margin-left:-116px}.coverflow-track{height:310px}}
+@media(max-width:500px){.usecase-card{width:212px;height:auto;aspect-ratio:4 / 5;margin-left:-106px}.coverflow-track{height:285px}}

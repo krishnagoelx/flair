@@ -58,7 +58,7 @@ if (coverflow && coverflowCards.length) {
       const scale = Math.max(.78, 1 - Math.abs(distance) * .1);
       card.style.transform = `translateX(${distance * spacing}px) translateZ(${depth}px) rotateY(${-distance * 18}deg) scale(${scale})`;
       card.style.opacity = visible ? String(Math.max(.3, 1 - Math.abs(distance) * .24)) : '0';
-      card.style.filter = distance === 0 ? 'none' : 'brightness(.82) saturate(.82)';
+      card.style.filter = 'none';
       card.style.pointerEvents = visible ? 'auto' : 'none';
       card.style.zIndex = String(20 - Math.abs(distance));
       card.dataset.active = String(distance === 0);
