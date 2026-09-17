@@ -55,8 +55,7 @@ button{font:inherit}
 .feature-layout{display:grid;grid-template-columns:minmax(470px,.82fr) minmax(0,1.18fr);gap:64px;align-items:start;width:min(100% - 64px,1320px);max-width:none}
 .feature-copy{position:sticky;top:112px}
 .feature-copy h2{max-width:470px;margin:0;font-size:clamp(38px,3.5vw,52px);font-weight:500;line-height:1.04;letter-spacing:-.052em;text-wrap:balance}
-.feature-intro{max-width:440px;margin:18px 0 34px;color:#b8b8b2;font-size:16px;line-height:1.5}
-.feature-list{display:grid}
+.feature-list{display:grid;margin-top:34px}
 .feature-trigger{position:relative;width:100%;padding:18px 0;border:0;border-bottom:1px solid #3a3a38;background:transparent;color:#f8f8f5;text-align:left;cursor:pointer}
 .feature-trigger span{display:block;font-size:17px;font-weight:500;line-height:1.25;letter-spacing:-.022em;transition:opacity 160ms var(--ease-out)}
 .feature-trigger small{display:block;width:100%;max-height:0;margin-top:0;overflow:hidden;color:#b8b8b2;font-size:12px;line-height:1.45;opacity:0;transform:translateY(-4px);transition:opacity 180ms var(--ease-out),max-height 220ms var(--ease-out),margin-top 220ms var(--ease-out),transform 180ms var(--ease-out)}
@@ -102,7 +101,7 @@ button{font:inherit}
   .feature-section{padding:82px 0}
   .feature-layout{grid-template-columns:1fr;gap:42px;width:min(100% - 40px,760px)}
   .feature-copy{position:static}
-  .feature-copy h2,.feature-intro{max-width:620px}
+  .feature-copy h2{max-width:620px}
   .feature-trigger small{font-size:13px}
   .feature-stage{gap:16px}
   .feature-view{min-height:460px}
@@ -131,7 +130,7 @@ button{font:inherit}
   .feature-section{padding:72px 0 80px}
   .feature-layout{gap:34px;width:min(100% - 32px,460px)}
   .feature-copy h2{font-size:38px}
-  .feature-intro{margin:15px 0 28px;font-size:15px}
+  .feature-list{margin-top:28px}
   .feature-trigger{padding:17px 0}
   .feature-trigger span{font-size:15px}
   .feature-trigger small{font-size:10.5px;line-height:1.45;letter-spacing:-.015em}
