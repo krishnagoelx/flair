@@ -53,25 +53,29 @@ const heroCards = [...document.querySelectorAll('[data-card]')];
 
 if (heroRail && heroCards.length) {
   const count = heroCards.length;
-  const gap = .05;
-  const rotate = 44;
-  const depth = .6;
-  const falloff = .56;
-  const fade = .1;
+  const ambientSpeed = .15;
   let position = 2;
-  let target = 2;
+  let velocity = ambientSpeed;
+  let targetVelocity = ambientSpeed;
   let cardWidth = 0;
   let frame;
   let drag;
-  let ambientTimer;
-  let hoverDelay;
-  let hoverTimer;
+  let lastFrame = performance.now();
   let hoverDirection = 0;
+  let running = false;
+
+  function settings() {
+    const compact = window.innerWidth <= 560;
+    return compact
+      ? { pitch: .74, rotate: 22, depth: .24, visible: 1.85, perspective: 5.4 }
+      : { pitch: .82, rotate: 30, depth: .36, visible: 2.75, perspective: 5.8 };
+  }
 
   function paint() {
     if (!cardWidth) return;
-    const pitch = cardWidth * (1 + gap);
-    heroRail.style.perspective = `${cardWidth * 3}px`;
+    const visual = settings();
+    const pitch = cardWidth * visual.pitch;
+    heroRail.style.perspective = `${cardWidth * visual.perspective}px`;
 
     heroCards.forEach((card, index) => {
       let offset = index - position;
@@ -79,95 +83,76 @@ if (heroRail && heroCards.length) {
       if (offset > count / 2) offset -= count;
 
       const distance = Math.abs(offset);
-      const ramp = Math.pow(distance, falloff);
-      const tilt = Math.min(rotate * ramp, 82) * Math.sign(offset);
-      const edge = Math.min(1, Math.max(0, count / 2 - distance));
+      const ramp = Math.pow(distance, .72);
+      const tilt = Math.min(visual.rotate * ramp, 66) * Math.sign(offset);
+      const visibility = Math.max(0, Math.min(1, visual.visible + .4 - distance));
 
-      card.style.transform = `translateX(calc(-50% + ${offset * pitch}px)) translateZ(${-depth * cardWidth * ramp}px) rotateY(${-tilt}deg)`;
-      card.style.opacity = String(Math.max(0, 1 - fade * distance) * edge);
+      card.style.transform = `translateX(calc(-50% + ${offset * pitch}px)) translateZ(${-visual.depth * cardWidth * ramp}px) rotateY(${-tilt}deg)`;
+      card.style.opacity = String(visibility * Math.max(.26, 1 - .13 * distance));
       card.style.zIndex = String(100 - Math.round(distance));
-      card.style.pointerEvents = distance < 4.75 ? 'auto' : 'none';
-      card.setAttribute('aria-hidden', String(distance >= 4.75));
+      card.style.pointerEvents = distance < visual.visible ? 'auto' : 'none';
+      card.classList.toggle('is-active', distance < .52);
+      card.setAttribute('aria-hidden', String(distance >= visual.visible));
     });
   }
 
-  function settle(nextTarget) {
-    if (frame) cancelAnimationFrame(frame);
-    target = nextTarget;
+  function tick(now) {
+    if (!running) return;
+    const delta = Math.min((now - lastFrame) / 1000, .05);
+    lastFrame = now;
 
-    if (reduceMotion.matches) {
-      position = target;
+    if (!drag) {
+      const blend = 1 - Math.exp(-delta * 5.5);
+      velocity += (targetVelocity - velocity) * blend;
+      position += velocity * delta;
       paint();
-      frame = undefined;
-      return;
     }
 
-    const step = () => {
-      const remaining = target - position;
-      if (Math.abs(remaining) < .0004) {
-        position = target;
-        paint();
-        frame = undefined;
-        return;
-      }
-      position += remaining * .16;
-      paint();
-      frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
+    frame = requestAnimationFrame(tick);
   }
 
-  const nudge = by => settle(Math.round(target) + by);
+  function startMotion() {
+    if (running || reduceMotion.matches || document.hidden) return;
+    running = true;
+    lastFrame = performance.now();
+    frame = requestAnimationFrame(tick);
+  }
+
+  function stopMotion() {
+    running = false;
+    if (frame) cancelAnimationFrame(frame);
+    frame = undefined;
+  }
 
   function measure() {
     cardWidth = heroCards[0].offsetWidth;
     paint();
   }
 
-  function stopAmbient() {
-    window.clearInterval(ambientTimer);
-  }
-
-  function startAmbient() {
-    stopAmbient();
-    if (reduceMotion.matches || document.hidden || drag) return;
-    ambientTimer = window.setInterval(() => nudge(1), 3400);
-  }
-
-  function stopHover() {
-    window.clearTimeout(hoverDelay);
-    window.clearInterval(hoverTimer);
+  function clearHover() {
     hoverDirection = 0;
+    targetVelocity = ambientSpeed;
     delete heroRail.dataset.direction;
   }
 
   function setHover(direction) {
     if (direction === hoverDirection) return;
-    stopHover();
+    clearHover();
     if (!direction || reduceMotion.matches || drag) return;
     hoverDirection = direction;
+    targetVelocity = direction * .48;
     heroRail.dataset.direction = direction > 0 ? 'forward' : 'backward';
-    hoverDelay = window.setTimeout(() => {
-      nudge(direction);
-      hoverTimer = window.setInterval(() => nudge(direction), 980);
-    }, 280);
   }
 
-  heroRail.addEventListener('pointerenter', stopAmbient);
   heroRail.addEventListener('pointerleave', () => {
     if (drag) return;
-    stopHover();
-    startAmbient();
+    clearHover();
   });
   heroRail.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
-    if (frame) cancelAnimationFrame(frame);
-    frame = undefined;
-    stopAmbient();
-    stopHover();
+    clearHover();
     heroRail.setPointerCapture(event.pointerId);
     heroRail.dataset.dragging = 'true';
-    target = position;
     drag = { id: event.pointerId, x: event.clientX, position, velocity: 0, time: performance.now() };
   });
   heroRail.addEventListener('pointermove', event => {
@@ -179,7 +164,7 @@ if (heroRail && heroCards.length) {
       return;
     }
 
-    const pitch = cardWidth * (1 + gap);
+    const pitch = cardWidth * settings().pitch;
     const now = performance.now();
     const previous = position;
     position = drag.position - (event.clientX - drag.x) / pitch;
@@ -190,12 +175,11 @@ if (heroRail && heroCards.length) {
 
   function endDrag(event) {
     if (!drag || drag.id !== event.pointerId) return;
-    const carried = Math.max(-2, Math.min(2, drag.velocity * .18));
+    velocity = Math.max(-1.5, Math.min(1.5, drag.velocity));
     drag = undefined;
     heroRail.removeAttribute('data-dragging');
     if (heroRail.hasPointerCapture(event.pointerId)) heroRail.releasePointerCapture(event.pointerId);
-    settle(Math.round(position + carried));
-    startAmbient();
+    targetVelocity = ambientSpeed;
   }
 
   heroRail.addEventListener('pointerup', endDrag);
@@ -203,19 +187,24 @@ if (heroRail && heroCards.length) {
   heroRail.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
-    stopAmbient();
-    nudge(event.key === 'ArrowRight' ? 1 : -1);
+    position = Math.round(position) + (event.key === 'ArrowRight' ? 1 : -1);
+    velocity = 0;
+    paint();
   });
-  heroRail.addEventListener('blur', startAmbient);
-  document.addEventListener('visibilitychange', startAmbient);
+  heroRail.addEventListener('blur', clearHover);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopMotion();
+    else startMotion();
+  });
   window.addEventListener('resize', measure);
   reduceMotion.addEventListener('change', () => {
     measure();
-    startAmbient();
+    if (reduceMotion.matches) stopMotion();
+    else startMotion();
   });
 
   heroCards.forEach(card => card.querySelector('img')?.setAttribute('draggable', 'false'));
   new ResizeObserver(measure).observe(heroRail);
   measure();
-  startAmbient();
+  startMotion();
 }
