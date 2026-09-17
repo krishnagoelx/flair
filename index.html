@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Flair adds shopping to AI agents, apps, and games." />
     <title>Flair | Shopping for AI apps</title>
-    <link rel="stylesheet" href="styles.css?v=cylinder-1" />
-    <script src="script.js?v=cylinder-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=contained-1" />
+    <script src="script.js?v=contained-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -46,27 +46,29 @@
         </div>
       </section>
       <section class="feature-section" id="product" aria-labelledby="features-title">
-        <div class="shell feature-layout">
-          <div class="feature-copy">
-            <h2 id="features-title">Everything shopping, handled.</h2>
-            <div class="feature-list" role="tablist" aria-label="Flair capabilities">
-              <button class="feature-trigger is-active" type="button" role="tab" aria-selected="true" aria-controls="feature-right-products" id="feature-left-products" data-feature="products"><span>Show the right products</span><small>Use the context you already have about each user to recommend the right products.</small></button>
-              <button class="feature-trigger" type="button" role="tab" aria-selected="false" aria-controls="feature-right-shop" id="feature-left-shop" data-feature="shop"><span>Let your AI shop for the user</span><small>From recommendation to checkout, Flair handles the purchase inside your app.</small></button>
-              <button class="feature-trigger" type="button" role="tab" aria-selected="false" aria-controls="feature-right-convert" id="feature-left-convert" data-feature="convert"><span>Already optimized to convert</span><small>Flair combines your app’s context with its own shopping intelligence to select the right product, price, deal, and offer for each user.</small></button>
-              <button class="feature-trigger" type="button" role="tab" aria-selected="false" aria-controls="feature-right-native" id="feature-left-native" data-feature="native"><span>A shopping experience that feels native to your app</span><small>From product cards to checkout, Flair generates polished UI and a seamless experience that looks and feels like part of your product.</small></button>
-              <button class="feature-trigger" type="button" role="tab" aria-selected="false" aria-controls="feature-right-earn" id="feature-left-earn" data-feature="earn"><span>Earn on every sale</span><small>Turn helpful recommendations into a new revenue stream.</small></button>
+        <div class="feature-card">
+          <div class="feature-layout">
+            <div class="feature-copy">
+              <h2 id="features-title">Everything shopping, handled.</h2>
+              <div class="feature-list" role="tablist" aria-label="Flair capabilities">
+                <button class="feature-trigger is-active" type="button" role="tab" aria-selected="true" aria-controls="feature-right-products" id="feature-left-products" data-feature="products"><span>Show the right products</span><small>Use the context you already have about each user to recommend the right products.</small></button>
+                <button class="feature-trigger" type="button" role="tab" aria-selected="false" aria-controls="feature-right-shop" id="feature-left-shop" data-feature="shop"><span>Let your AI shop for the user</span><small>From recommendation to checkout, Flair handles the purchase inside your app.</small></button>
+                <button class="feature-trigger" type="button" role="tab" aria-selected="false" aria-controls="feature-right-convert" id="feature-left-convert" data-feature="convert"><span>Already optimized to convert</span><small>Flair combines your app’s context with its own shopping intelligence to select the right product, price, deal, and offer for each user.</small></button>
+                <button class="feature-trigger" type="button" role="tab" aria-selected="false" aria-controls="feature-right-native" id="feature-left-native" data-feature="native"><span>A shopping experience that feels native to your app</span><small>From product cards to checkout, Flair generates polished UI and a seamless experience that looks and feels like part of your product.</small></button>
+                <button class="feature-trigger" type="button" role="tab" aria-selected="false" aria-controls="feature-right-earn" id="feature-left-earn" data-feature="earn"><span>Earn on every sale</span><small>Turn helpful recommendations into a new revenue stream.</small></button>
+              </div>
             </div>
-          </div>
-          <div class="feature-stage" aria-live="polite">
-            <section class="feature-view is-active" id="feature-right-products" role="tabpanel" aria-labelledby="feature-left-products" data-view="products"><img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="Fresh ingredients selected for a meal plan" /><div class="stage-overlay"><span>AI nutritionist</span><h3>Recommended for this week</h3><p>Ingredients selected around the meal plan, diet, and delivery window.</p></div></section>
-            <section class="feature-view" id="feature-right-shop" role="tabpanel" aria-labelledby="feature-left-shop" data-view="shop"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="A checkout payment terminal" /><div class="stage-overlay"><span>Checkout in your app</span><h3>Ready when the user is</h3><p>Flair carries a good recommendation all the way through purchase.</p></div></section>
-            <section class="feature-view" id="feature-right-convert" role="tabpanel" aria-labelledby="feature-left-convert" data-view="convert"><img src="https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="Online shopping on a laptop" /><div class="stage-overlay"><span>Shopping intelligence</span><h3>The right offer for this user</h3><p>Product fit, price, deal, and timing work together before the product is shown.</p></div></section>
-            <section class="feature-view" id="feature-right-native" role="tabpanel" aria-labelledby="feature-left-native" data-view="native"><img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="A person using an app on a laptop" /><div class="stage-overlay"><span>Designed for your product</span><h3>Shopping that belongs there</h3><p>Flair adapts its product and checkout experience to the moment your app creates.</p></div></section>
-            <section class="feature-view" id="feature-right-earn" role="tabpanel" aria-labelledby="feature-left-earn" data-view="earn"><img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="A person reviewing an order receipt" /><div class="stage-overlay"><span>Partner earnings</span><h3>Value your product creates</h3><p>Turn the recommendations that help your users into attributable revenue.</p></div></section>
+            <div class="feature-stage" aria-live="polite">
+              <section class="feature-view is-active" id="feature-right-products" role="tabpanel" aria-labelledby="feature-left-products" data-view="products"><img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="Fresh ingredients selected for a meal plan" /><div class="stage-overlay"><span>AI nutritionist</span><h3>Recommended for this week</h3><p>Ingredients selected around the meal plan, diet, and delivery window.</p></div></section>
+              <section class="feature-view" id="feature-right-shop" role="tabpanel" aria-labelledby="feature-left-shop" data-view="shop"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="A checkout payment terminal" /><div class="stage-overlay"><span>Checkout in your app</span><h3>Ready when the user is</h3><p>Flair carries a good recommendation all the way through purchase.</p></div></section>
+              <section class="feature-view" id="feature-right-convert" role="tabpanel" aria-labelledby="feature-left-convert" data-view="convert"><img src="https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="Online shopping on a laptop" /><div class="stage-overlay"><span>Shopping intelligence</span><h3>The right offer for this user</h3><p>Product fit, price, deal, and timing work together before the product is shown.</p></div></section>
+              <section class="feature-view" id="feature-right-native" role="tabpanel" aria-labelledby="feature-left-native" data-view="native"><img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="A person using an app on a laptop" /><div class="stage-overlay"><span>Designed for your product</span><h3>Shopping that belongs there</h3><p>Flair adapts its product and checkout experience to the moment your app creates.</p></div></section>
+              <section class="feature-view" id="feature-right-earn" role="tabpanel" aria-labelledby="feature-left-earn" data-view="earn"><img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="A person reviewing an order receipt" /><div class="stage-overlay"><span>Partner earnings</span><h3>Value your product creates</h3><p>Turn the recommendations that help your users into attributable revenue.</p></div></section>
+            </div>
           </div>
         </div>
       </section>
-      <section class="closing-section" id="developers" aria-labelledby="closing-title"><div class="shell closing-inner"><h2 id="closing-title">Give your AI a flair for shopping.</h2><p>Let the next useful recommendation become something your user actually gets.</p><a class="button button-light" href="demo.html">Book a demo</a></div></section>
+      <section class="closing-section" id="developers" aria-labelledby="closing-title"><div class="shell closing-inner"><h2 id="closing-title">Give your AI a flair for shopping.</h2><p>Let the next useful recommendation become something your user actually gets.</p><a class="button button-dark" href="demo.html">Book a demo</a></div></section>
     </main>
     <footer class="site-footer" id="company"><div class="shell footer-inner"><a class="wordmark" href="#top" aria-label="Flair home">flair<span aria-hidden="true">.</span></a><p>Shopping infrastructure for apps that know their users.</p><div><a href="#product">Product</a><a href="#developers">Developers</a><a href="demo.html">Book a demo</a></div></div></footer>
   </body>
