@@ -64,35 +64,48 @@ if (heroRail && heroCards.length) {
   let hoverDirection = 0;
   let running = false;
 
+  /*
+   * Previous fan-style coverflow, intentionally retained as a commented reference:
+   * compact ? { pitch: .74, rotate: 22, depth: .24, visible: 1.85 }
+   *         : { pitch: .82, rotate: 30, depth: .36, visible: 2.75 }
+   * transform: translateX(offset * pitch) translateZ(-depth * distance) rotateY(tilt)
+   *
+   * The active implementation below places every card on one continuous cylinder.
+   */
   function settings() {
     const compact = window.innerWidth <= 560;
     return compact
-      ? { pitch: .74, rotate: 22, depth: .24, visible: 1.85, perspective: 5.4 }
-      : { pitch: .82, rotate: 30, depth: .36, visible: 2.75, perspective: 5.8 };
+      ? { radius: cardWidth * 1.9, visibleAngle: 70, fadeAngle: 30, perspective: cardWidth * 6 }
+      : { radius: cardWidth * 2.45, visibleAngle: 82, fadeAngle: 40, perspective: cardWidth * 7 };
   }
 
   function paint() {
     if (!cardWidth) return;
     const visual = settings();
-    const pitch = cardWidth * visual.pitch;
-    heroRail.style.perspective = `${cardWidth * visual.perspective}px`;
+    const angleStep = 360 / count;
+    heroRail.style.perspective = `${visual.perspective}px`;
 
     heroCards.forEach((card, index) => {
       let offset = index - position;
       offset = ((offset % count) + count) % count;
       if (offset > count / 2) offset -= count;
 
-      const distance = Math.abs(offset);
-      const ramp = Math.pow(distance, .72);
-      const tilt = Math.min(visual.rotate * ramp, 66) * Math.sign(offset);
-      const visibility = Math.max(0, Math.min(1, visual.visible + .4 - distance));
+      const angle = offset * angleStep;
+      const absoluteAngle = Math.abs(angle);
+      const radians = angle * Math.PI / 180;
+      const x = Math.sin(radians) * visual.radius;
+      const z = (Math.cos(radians) - 1) * visual.radius;
+      const fadeRange = visual.visibleAngle - visual.fadeAngle;
+      const edgeProgress = Math.max(0, Math.min(1, (absoluteAngle - visual.fadeAngle) / fadeRange));
+      const opacity = absoluteAngle >= visual.visibleAngle ? 0 : 1 - edgeProgress * edgeProgress;
 
-      card.style.transform = `translateX(calc(-50% + ${offset * pitch}px)) translateZ(${-visual.depth * cardWidth * ramp}px) rotateY(${-tilt}deg)`;
-      card.style.opacity = String(visibility * Math.max(.26, 1 - .13 * distance));
-      card.style.zIndex = String(100 - Math.round(distance));
-      card.style.pointerEvents = distance < visual.visible ? 'auto' : 'none';
-      card.classList.toggle('is-active', distance < .52);
-      card.setAttribute('aria-hidden', String(distance >= visual.visible));
+      card.style.transform = `translateX(calc(-50% + ${x}px)) translateZ(${z}px) rotateY(${angle}deg)`;
+      card.style.opacity = String(opacity);
+      card.style.filter = edgeProgress > 0 ? `blur(${edgeProgress * 6}px) saturate(${1 - edgeProgress * .16})` : 'none';
+      card.style.zIndex = String(1000 + Math.round(z));
+      card.style.pointerEvents = absoluteAngle < visual.fadeAngle ? 'auto' : 'none';
+      card.classList.toggle('is-active', absoluteAngle < angleStep * .52);
+      card.setAttribute('aria-hidden', String(absoluteAngle >= visual.visibleAngle));
     });
   }
 
@@ -105,6 +118,7 @@ if (heroRail && heroCards.length) {
       const blend = 1 - Math.exp(-delta * 5.5);
       velocity += (targetVelocity - velocity) * blend;
       position += velocity * delta;
+      if (Math.abs(position) > count * 100) position %= count;
       paint();
     }
 
@@ -164,7 +178,7 @@ if (heroRail && heroCards.length) {
       return;
     }
 
-    const pitch = cardWidth * settings().pitch;
+    const pitch = (2 * Math.PI * settings().radius) / count;
     const now = performance.now();
     const previous = position;
     position = drag.position - (event.clientX - drag.x) / pitch;
