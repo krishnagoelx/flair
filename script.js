@@ -1,209 +1,173 @@
-const stage = document.querySelector('#demo-stage');
-const panels = [...document.querySelectorAll('[data-panel]')];
-const previous = document.querySelector('#prev-step');
-const next = document.querySelector('#next-step');
-const stepNumber = document.querySelector('#step-number');
-const progress = document.querySelector('#demo-progress-bar');
-const menuToggle = document.querySelector('.menu-toggle');
-const mobileNav = document.querySelector('#mobile-nav');
+const featureTriggers = [...document.querySelectorAll('[data-feature]')];
+const featureViews = [...document.querySelectorAll('[data-view]')];
 
-if (stage && panels.length && previous && next && stepNumber && progress) {
-  let step = 0;
-
-  function showStep(value) {
-    step = Math.max(0, Math.min(panels.length - 1, value));
-    stage.dataset.step = String(step);
-    panels.forEach((panel, index) => {
-      const active = index === step;
-      panel.classList.toggle('is-active', active);
-      panel.setAttribute('aria-hidden', String(!active));
-      panel.inert = !active;
-    });
-    stepNumber.textContent = String(step + 1).padStart(2, '0');
-    progress.style.transform = `scaleX(${(step + 1) / panels.length})`;
-    previous.disabled = step === 0;
-    next.disabled = step === panels.length - 1;
-  }
-
-  previous.addEventListener('click', () => showStep(step - 1));
-  next.addEventListener('click', () => showStep(step + 1));
-  showStep(0);
+function showFeature(name) {
+  featureTriggers.forEach(trigger => {
+    const active = trigger.dataset.feature === name;
+    trigger.classList.toggle('is-active', active);
+    trigger.setAttribute('aria-selected', String(active));
+    trigger.tabIndex = active ? 0 : -1;
+  });
+  featureViews.forEach(view => {
+    const active = view.dataset.view === name;
+    view.hidden = !active;
+    view.classList.toggle('is-active', active);
+  });
 }
 
-const coverflow = document.querySelector('.coverflow');
-const coverflowCards = [...document.querySelectorAll('[data-card]')];
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+featureTriggers.forEach((trigger, index) => {
+  trigger.addEventListener('click', () => showFeature(trigger.dataset.feature));
+  trigger.addEventListener('keydown', event => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? featureTriggers.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + featureTriggers.length) % featureTriggers.length;
+    featureTriggers[nextIndex].focus();
+    showFeature(featureTriggers[nextIndex].dataset.feature);
+  });
+});
 
-if (coverflow && coverflowCards.length) {
-  let activeCard = 0;
-  let autoplay;
+showFeature('products');
+
+const heroRail = document.querySelector('.hero-rail');
+const heroCards = [...document.querySelectorAll('[data-card]')];
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+if (heroRail && heroCards.length) {
+  let activeIndex = 2;
   let dragOffset = 0;
-  let dragState = null;
+  let dragStartX = 0;
+  let lastPointerX = 0;
+  let lastPointerTime = 0;
+  let pointerVelocity = 0;
+  let dragging = false;
+  let ambientTimer;
+  let hoverDelay;
+  let hoverTimer;
   let hoverDirection = 0;
-  let lastPointerX = null;
 
-  function cardSpacing() {
-    return window.innerWidth < 800
-      ? Math.min(window.innerWidth * .43, 194)
-      : Math.min(window.innerWidth * .22, 300);
-  }
+  const wrap = value => ((value % heroCards.length) + heroCards.length) % heroCards.length;
+  const spacing = () => window.innerWidth <= 500 ? 126 : window.innerWidth <= 800 ? 145 : 176;
 
-  function distanceFromActive(index) {
-    let distance = index - activeCard;
-    const halfway = coverflowCards.length / 2;
-    if (distance > halfway) distance -= coverflowCards.length;
-    if (distance < -halfway) distance += coverflowCards.length;
-    return distance;
-  }
+  function paint(animate = true) {
+    heroRail.dataset.keyboard = animate ? 'false' : 'true';
+    heroCards.forEach((card, index) => {
+      let distance = index - activeIndex;
+      if (distance > heroCards.length / 2) distance -= heroCards.length;
+      if (distance < -heroCards.length / 2) distance += heroCards.length;
 
-  function paintCoverflow() {
-    const compact = window.innerWidth < 800;
-    const spacing = cardSpacing();
-    coverflowCards.forEach((card, index) => {
-      const distance = distanceFromActive(index) + dragOffset / spacing;
-      const magnitude = Math.abs(distance);
-      const visible = magnitude <= (compact ? 1 : 3);
-      const depth = magnitude < .01 ? 155 : -54 - (magnitude - 1) * 118;
-      const scale = magnitude < .01 ? 1 : Math.max(.68, 1 - magnitude * .12);
-      const tilt = compact ? 22 : 22;
-      card.style.transform = `translateX(${distance * spacing}px) translateY(${Math.min(magnitude * 12, 36)}px) translateZ(${depth}px) rotateY(${-distance * tilt}deg) scale(${scale})`;
-      card.style.opacity = visible ? String(Math.max(.26, 1 - magnitude * .2)) : '0';
-      card.style.filter = 'none';
-      card.style.pointerEvents = visible ? 'auto' : 'none';
-      card.style.zIndex = String(30 - Math.ceil(magnitude));
-      card.dataset.active = String(distance === 0);
-      card.tabIndex = distance === 0 ? 0 : -1;
-      card.setAttribute('aria-hidden', String(!visible));
+      const exactDistance = distance + dragOffset / spacing();
+      const depth = Math.abs(exactDistance);
+      const visibleLimit = window.innerWidth <= 800 ? 2.35 : 4.2;
+      const x = exactDistance * spacing();
+      const y = Math.min(depth * 7, 24);
+      const rotation = Math.max(-26, Math.min(26, exactDistance * -9));
+
+      card.style.transform = `translate3d(${x}px, ${y}px, 0) rotateY(${rotation}deg)`;
+      card.style.opacity = depth <= visibleLimit ? String(Math.max(.28, 1 - depth * .16)) : '0';
+      card.style.zIndex = String(20 - Math.round(depth * 2));
+      card.style.pointerEvents = depth <= visibleLimit ? 'auto' : 'none';
+      card.setAttribute('aria-hidden', String(depth > visibleLimit));
     });
+    if (!animate) requestAnimationFrame(() => { heroRail.dataset.keyboard = 'false'; });
   }
 
-  function goTo(nextIndex, options = {}) {
-    const { pause = false, instant = false } = options;
-    if (instant) coverflow.dataset.keyboard = 'true';
-    activeCard = (nextIndex + coverflowCards.length) % coverflowCards.length;
-    paintCoverflow();
-    if (instant) requestAnimationFrame(() => delete coverflow.dataset.keyboard);
-    if (pause) pauseAutoplay();
+  function goTo(index, animate = true) {
+    activeIndex = wrap(index);
+    dragOffset = 0;
+    paint(animate);
   }
 
-  function pauseAutoplay() {
-    window.clearInterval(autoplay);
+  function stopAmbient() {
+    window.clearInterval(ambientTimer);
   }
 
-  function startAutoplay() {
-    pauseAutoplay();
+  function startAmbient() {
+    stopAmbient();
+    if (reduceMotion.matches || document.hidden || dragging) return;
+    ambientTimer = window.setInterval(() => goTo(activeIndex + 1), 3200);
+  }
+
+  function stopHoverMotion() {
+    window.clearTimeout(hoverDelay);
+    window.clearInterval(hoverTimer);
     hoverDirection = 0;
-    delete coverflow.dataset.hoverDirection;
-    if (!prefersReducedMotion.matches) {
-      autoplay = window.setInterval(() => goTo(activeCard + 1), 3600);
-    }
+    delete heroRail.dataset.direction;
   }
 
-  function setHoverDirection(direction) {
-    if (direction === hoverDirection || dragState) return;
+  function startHoverMotion(direction) {
+    if (direction === hoverDirection) return;
+    stopHoverMotion();
+    if (!direction || reduceMotion.matches || dragging) return;
     hoverDirection = direction;
-    pauseAutoplay();
-    if (!direction || prefersReducedMotion.matches) {
-      delete coverflow.dataset.hoverDirection;
+    heroRail.dataset.direction = direction > 0 ? 'forward' : 'backward';
+    hoverDelay = window.setTimeout(() => {
+      goTo(activeIndex + direction);
+      hoverTimer = window.setInterval(() => goTo(activeIndex + direction), 900);
+    }, 240);
+  }
+
+  heroRail.addEventListener('pointermove', event => {
+    if (dragging) {
+      const now = performance.now();
+      dragOffset = event.clientX - dragStartX;
+      pointerVelocity = (event.clientX - lastPointerX) / Math.max(1, now - lastPointerTime);
+      lastPointerX = event.clientX;
+      lastPointerTime = now;
+      paint();
       return;
     }
-    coverflow.dataset.hoverDirection = direction > 0 ? 'forward' : 'backward';
-    autoplay = window.setInterval(() => goTo(activeCard + direction), 1050);
+
+    if (event.pointerType === 'touch') return;
+    const bounds = heroRail.getBoundingClientRect();
+    const position = (event.clientX - bounds.left) / bounds.width;
+    startHoverMotion(position < .36 ? -1 : position > .64 ? 1 : 0);
+  });
+
+  heroRail.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+    dragging = true;
+    dragStartX = event.clientX;
+    lastPointerX = event.clientX;
+    lastPointerTime = performance.now();
+    pointerVelocity = 0;
+    stopAmbient();
+    stopHoverMotion();
+    heroRail.dataset.dragging = 'true';
+    heroRail.setPointerCapture(event.pointerId);
+  });
+
+  function endDrag(event) {
+    if (!dragging) return;
+    dragging = false;
+    heroRail.removeAttribute('data-dragging');
+    if (heroRail.hasPointerCapture(event.pointerId)) heroRail.releasePointerCapture(event.pointerId);
+    const momentumLimit = spacing() * .5;
+    const momentum = Math.max(-momentumLimit, Math.min(momentumLimit, pointerVelocity * 70));
+    const steps = Math.max(-2, Math.min(2, Math.round((dragOffset + momentum) / spacing())));
+    goTo(activeIndex - steps);
+    startAmbient();
   }
 
-  function steerFromPointer(clientX) {
-    if (typeof clientX !== 'number') return;
-    lastPointerX = clientX;
-    const bounds = coverflow.getBoundingClientRect();
-    const position = (clientX - bounds.left) / bounds.width;
-    setHoverDirection(position < .34 ? -1 : position > .66 ? 1 : 0);
-  }
+  heroRail.addEventListener('pointerup', endDrag);
+  heroRail.addEventListener('pointercancel', endDrag);
+  heroRail.addEventListener('pointerleave', () => {
+    if (!dragging) {
+      stopHoverMotion();
+      startAmbient();
+    }
+  });
+  heroRail.addEventListener('pointerenter', stopAmbient);
+  heroRail.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    stopAmbient();
+    goTo(activeIndex + (event.key === 'ArrowRight' ? 1 : -1), false);
+  });
+  heroRail.addEventListener('blur', startAmbient);
+  document.addEventListener('visibilitychange', startAmbient);
+  window.addEventListener('resize', () => paint(false));
+  reduceMotion.addEventListener('change', startAmbient);
 
-  function resumeMotion() {
-    if (lastPointerX !== null) {
-      hoverDirection = 0;
-      steerFromPointer(lastPointerX);
-    }
-    if (!hoverDirection) startAutoplay();
-  }
-
-  coverflow.addEventListener('keydown', event => {
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      goTo(activeCard - 1, { pause: true, instant: true });
-    }
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      goTo(activeCard + 1, { pause: true, instant: true });
-    }
-  });
-  coverflow.addEventListener('pointerdown', event => {
-    if (dragState || event.isPrimary === false) return;
-    dragState = { startX: event.clientX, lastX: event.clientX, lastTime: performance.now(), velocity: 0 };
-    coverflow.setPointerCapture(event.pointerId);
-    coverflow.dataset.dragging = 'true';
-    hoverDirection = 0;
-    delete coverflow.dataset.hoverDirection;
-    pauseAutoplay();
-  });
-  coverflow.addEventListener('pointermove', event => {
-    if (!dragState) {
-      steerFromPointer(event.clientX);
-      return;
-    }
-    const now = performance.now();
-    const elapsed = Math.max(1, now - dragState.lastTime);
-    dragState.velocity = (event.clientX - dragState.lastX) / elapsed;
-    dragState.lastX = event.clientX;
-    dragState.lastTime = now;
-    dragOffset = event.clientX - dragState.startX;
-    paintCoverflow();
-  });
-  coverflow.addEventListener('pointerup', event => {
-    if (!dragState) return;
-    const spacing = cardSpacing();
-    const dragSteps = Math.round(-dragOffset / spacing);
-    const momentumStep = Math.abs(dragState.velocity) > .32 ? (dragState.velocity < 0 ? 1 : -1) : 0;
-    activeCard = (activeCard + (momentumStep || dragSteps) + coverflowCards.length) % coverflowCards.length;
-    dragOffset = 0;
-    dragState = null;
-    delete coverflow.dataset.dragging;
-    paintCoverflow();
-    window.setTimeout(resumeMotion, 500);
-  });
-  coverflow.addEventListener('pointercancel', () => {
-    dragOffset = 0;
-    dragState = null;
-    delete coverflow.dataset.dragging;
-    paintCoverflow();
-    window.setTimeout(resumeMotion, 500);
-  });
-  coverflow.addEventListener('pointerenter', event => steerFromPointer(event.clientX));
-  coverflow.addEventListener('mouseleave', startAutoplay);
-  coverflow.addEventListener('focusin', pauseAutoplay);
-  coverflow.addEventListener('focusout', event => {
-    if (!coverflow.contains(event.relatedTarget)) startAutoplay();
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) pauseAutoplay();
-    else startAutoplay();
-  });
-  window.addEventListener('resize', paintCoverflow);
-  prefersReducedMotion.addEventListener('change', startAutoplay);
-  paintCoverflow();
-  startAutoplay();
-}
-
-if (menuToggle && mobileNav) {
-  menuToggle.addEventListener('click', () => {
-    const open = menuToggle.getAttribute('aria-expanded') !== 'true';
-    menuToggle.setAttribute('aria-expanded', String(open));
-    mobileNav.hidden = !open;
-  });
-  mobileNav.addEventListener('click', event => {
-    if (event.target.closest('a')) {
-      menuToggle.setAttribute('aria-expanded', 'false');
-      mobileNav.hidden = true;
-    }
-  });
+  paint(false);
+  startAmbient();
 }
