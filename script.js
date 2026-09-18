@@ -55,18 +55,25 @@ const heroCards = [...document.querySelectorAll('[data-card]')];
 if (heroRail && heroCylinder && heroCards.length) {
   const count = heroCards.length;
   const angleStep = 360 / count;
-  const ambientSpeed = -2.4;
+  const idleSpeed = -6;
+  const hoverSweep = 140;
+  const hoverEase = .085;
+  const canHover = window.matchMedia('(hover: hover) and (pointer: fine)');
   let rotation = -2 * angleStep;
-  let velocity = ambientSpeed;
-  let targetVelocity = ambientSpeed;
   let cardWidth = 0;
   let radius = 0;
   let ringScale = 1;
   let frame;
   let drag;
+  let spring;
   let lastFrame = performance.now();
-  let hoverDirection = 0;
+  let hovering = false;
+  let hoverFrom = 0;
+  let hoverBase = 0;
+  let hoverTarget = 0;
+  let lastPointerX = 0;
   let running = false;
+  let onScreen = false;
   let activeIndex = -1;
 
   /*
@@ -104,9 +111,23 @@ if (heroRail && heroCylinder && heroCards.length) {
     lastFrame = now;
 
     if (!drag) {
-      const blend = 1 - Math.exp(-delta * 5.5);
-      velocity += (targetVelocity - velocity) * blend;
-      rotation = normalizeAngle(rotation + velocity * delta);
+      if (spring) {
+        const displacement = rotation - spring.target;
+        const acceleration = (-60 * displacement - 22 * spring.velocity) / .9;
+        spring.velocity += acceleration * delta;
+        rotation += spring.velocity * delta;
+        if (Math.abs(displacement) < .03 && Math.abs(spring.velocity) < .08) {
+          rotation = spring.target;
+          spring = undefined;
+          if (hovering) anchorHover(lastPointerX);
+        }
+      } else if (hovering) {
+        const blend = 1 - Math.pow(1 - hoverEase, delta * 60);
+        rotation += (hoverTarget - rotation) * blend;
+      } else {
+        rotation += idleSpeed * delta;
+      }
+      if (Math.abs(rotation) > 3600) rotation %= 360;
       paint();
     }
 
@@ -114,7 +135,7 @@ if (heroRail && heroCylinder && heroCards.length) {
   }
 
   function startMotion() {
-    if (running || reduceMotion.matches) return;
+    if (running || reduceMotion.matches || !onScreen || document.hidden) return;
     running = true;
     lastFrame = performance.now();
     frame = requestAnimationFrame(tick);
@@ -128,9 +149,7 @@ if (heroRail && heroCylinder && heroCards.length) {
 
   function measure() {
     cardWidth = heroCards[0].offsetWidth;
-    const compact = window.innerWidth <= 560;
-    const medium = window.innerWidth <= 900;
-    radius = cardWidth * (compact ? 2.85 : medium ? 3.4 : 3.7);
+    radius = cardWidth * 3.02;
     const perspective = Number.parseFloat(getComputedStyle(heroRail).perspective) || 1500;
     ringScale = perspective / (perspective + radius);
     heroCards.forEach((card, index) => {
@@ -139,56 +158,60 @@ if (heroRail && heroCylinder && heroCards.length) {
     paint();
   }
 
-  function clearHover() {
-    hoverDirection = 0;
-    targetVelocity = ambientSpeed;
-    delete heroRail.dataset.direction;
+  function anchorHover(clientX) {
+    const bounds = heroRail.getBoundingClientRect();
+    hoverFrom = (clientX - bounds.left) / bounds.width - .5;
+    hoverBase = rotation;
+    hoverTarget = hoverBase;
   }
 
-  function setHover(direction) {
-    if (direction === hoverDirection) return;
-    clearHover();
-    if (!direction || reduceMotion.matches || drag) return;
-    hoverDirection = direction;
-    targetVelocity = direction * 8.5;
-    heroRail.dataset.direction = direction > 0 ? 'forward' : 'backward';
-  }
-
+  heroRail.addEventListener('pointerenter', event => {
+    if (!canHover.matches || reduceMotion.matches || drag || hovering) return;
+    hovering = true;
+    spring = undefined;
+    lastPointerX = event.clientX;
+    anchorHover(event.clientX);
+  });
   heroRail.addEventListener('pointerleave', () => {
-    if (drag) return;
-    clearHover();
+    hovering = false;
+    delete heroRail.dataset.direction;
   });
   heroRail.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
-    clearHover();
+    spring = undefined;
     heroRail.setPointerCapture(event.pointerId);
     heroRail.dataset.dragging = 'true';
-    drag = { id: event.pointerId, x: event.clientX, rotation, velocity: 0, time: performance.now() };
+    drag = { id: event.pointerId, x: event.clientX, velocity: 0 };
+    startMotion();
   });
   heroRail.addEventListener('pointermove', event => {
+    lastPointerX = event.clientX;
     if (!drag || drag.id !== event.pointerId) {
-      if (event.pointerType === 'touch') return;
+      if (!hovering) return;
       const bounds = heroRail.getBoundingClientRect();
-      const relativeX = (event.clientX - bounds.left) / bounds.width;
-      setHover(relativeX < .38 ? -1 : relativeX > .62 ? 1 : 0);
+      const normalizedX = (event.clientX - bounds.left) / bounds.width - .5;
+      hoverTarget = hoverBase + (normalizedX - hoverFrom) * hoverSweep;
+      const difference = hoverTarget - rotation;
+      heroRail.dataset.direction = difference > .5 ? 'forward' : difference < -.5 ? 'backward' : '';
       return;
     }
 
-    const now = performance.now();
-    const previous = rotation;
-    rotation = drag.rotation + ((event.clientX - drag.x) / Math.max(radius, 1)) * (180 / Math.PI);
-    drag.velocity = (normalizeAngle(rotation - previous) / Math.max(now - drag.time, 1)) * 1000;
-    drag.time = now;
+    const deltaX = event.clientX - drag.x;
+    drag.x = event.clientX;
+    drag.velocity = deltaX;
+    rotation += deltaX * .22;
     paint();
   });
 
   function endDrag(event) {
     if (!drag || drag.id !== event.pointerId) return;
-    velocity = reduceMotion.matches ? 0 : Math.max(-52, Math.min(52, drag.velocity));
+    const throwDistance = reduceMotion.matches ? 0 : drag.velocity * 4;
+    const initialVelocity = reduceMotion.matches ? 0 : drag.velocity * 12;
     drag = undefined;
     heroRail.removeAttribute('data-dragging');
     if (heroRail.hasPointerCapture(event.pointerId)) heroRail.releasePointerCapture(event.pointerId);
-    targetVelocity = reduceMotion.matches ? 0 : ambientSpeed;
+    if (throwDistance) spring = { target: rotation + throwDistance, velocity: initialVelocity };
+    else if (hovering) anchorHover(event.clientX);
   }
 
   heroRail.addEventListener('pointerup', endDrag);
@@ -196,11 +219,10 @@ if (heroRail && heroCylinder && heroCards.length) {
   heroRail.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
+    spring = undefined;
     rotation -= event.key === 'ArrowRight' ? angleStep : -angleStep;
-    velocity = 0;
     paint();
   });
-  heroRail.addEventListener('blur', clearHover);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) stopMotion();
     else startMotion();
@@ -212,8 +234,14 @@ if (heroRail && heroCylinder && heroCards.length) {
     else startMotion();
   });
 
+  const visibilityObserver = new IntersectionObserver(entries => {
+    onScreen = entries.some(entry => entry.isIntersecting);
+    if (onScreen) startMotion();
+    else stopMotion();
+  });
+
   heroCards.forEach(card => card.querySelector('img')?.setAttribute('draggable', 'false'));
   new ResizeObserver(measure).observe(heroRail);
+  visibilityObserver.observe(heroRail);
   measure();
-  startMotion();
 }
