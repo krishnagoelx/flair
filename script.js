@@ -81,7 +81,7 @@ if (heroRail && heroCylinder && heroCards.length) {
   }
 
   function paint() {
-    heroCylinder.style.transform = `translateX(-50%) rotateY(${rotation}deg)`;
+    heroCylinder.style.transform = `translateX(-50%) translateZ(${-radius}px) rotateY(${rotation}deg)`;
     const nextActive = Math.round(-rotation / angleStep);
     const normalizedIndex = ((nextActive % count) + count) % count;
     if (normalizedIndex === activeIndex) return;
