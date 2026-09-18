@@ -61,6 +61,7 @@ if (heroRail && heroCylinder && heroCards.length) {
   let targetVelocity = ambientSpeed;
   let cardWidth = 0;
   let radius = 0;
+  let ringScale = 1;
   let frame;
   let drag;
   let lastFrame = performance.now();
@@ -81,7 +82,7 @@ if (heroRail && heroCylinder && heroCards.length) {
   }
 
   function paint() {
-    heroCylinder.style.transform = `translateX(-50%) translateZ(${-radius}px) rotateY(${rotation}deg)`;
+    heroCylinder.style.transform = `translateX(-50%) scale3d(${ringScale}, ${ringScale}, ${ringScale}) rotateY(${rotation}deg)`;
     const nextActive = Math.round(-rotation / angleStep);
     const normalizedIndex = ((nextActive % count) + count) % count;
     if (normalizedIndex === activeIndex) return;
@@ -90,6 +91,7 @@ if (heroRail && heroCylinder && heroCards.length) {
       const relative = normalizeAngle(index * angleStep + rotation);
       const visible = Math.abs(relative) < 88;
       card.classList.toggle('is-active', index === activeIndex);
+      card.classList.toggle('is-back', Math.abs(relative) > 90);
       card.setAttribute('aria-hidden', String(!visible));
       card.style.pointerEvents = Math.abs(relative) < 58 ? 'auto' : 'none';
     });
@@ -125,8 +127,11 @@ if (heroRail && heroCylinder && heroCards.length) {
 
   function measure() {
     cardWidth = heroCards[0].offsetWidth;
-    const facePitch = cardWidth + (window.innerWidth <= 560 ? 12 : 16);
-    radius = (facePitch * count) / (2 * Math.PI);
+    const compact = window.innerWidth <= 560;
+    const medium = window.innerWidth <= 900;
+    radius = cardWidth * (compact ? 3.1 : medium ? 3.8 : 4.1);
+    const perspective = Number.parseFloat(getComputedStyle(heroRail).perspective) || 1500;
+    ringScale = perspective / (perspective + radius);
     heroCards.forEach((card, index) => {
       card.style.transform = `translate(-50%, -50%) rotateY(${index * angleStep}deg) translateZ(${radius}px)`;
     });
