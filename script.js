@@ -91,6 +91,7 @@ if (heroRail && heroCylinder && heroCards.length) {
       const relative = normalizeAngle(index * angleStep + rotation);
       const visible = Math.abs(relative) < 88;
       card.classList.toggle('is-active', index === activeIndex);
+      card.classList.toggle('is-side', Math.abs(relative) > 50 && Math.abs(relative) <= 90);
       card.classList.toggle('is-back', Math.abs(relative) > 90);
       card.setAttribute('aria-hidden', String(!visible));
       card.style.pointerEvents = Math.abs(relative) < 58 ? 'auto' : 'none';
@@ -129,7 +130,7 @@ if (heroRail && heroCylinder && heroCards.length) {
     cardWidth = heroCards[0].offsetWidth;
     const compact = window.innerWidth <= 560;
     const medium = window.innerWidth <= 900;
-    radius = cardWidth * (compact ? 3.1 : medium ? 3.8 : 4.1);
+    radius = cardWidth * (compact ? 2.85 : medium ? 3.4 : 3.7);
     const perspective = Number.parseFloat(getComputedStyle(heroRail).perspective) || 1500;
     ringScale = perspective / (perspective + radius);
     heroCards.forEach((card, index) => {
