@@ -49,20 +49,24 @@ if ('IntersectionObserver' in window) {
 showFeature('products');
 
 const heroRail = document.querySelector('.hero-rail');
+const heroCylinder = document.querySelector('.hero-cylinder');
 const heroCards = [...document.querySelectorAll('[data-card]')];
 
-if (heroRail && heroCards.length) {
+if (heroRail && heroCylinder && heroCards.length) {
   const count = heroCards.length;
-  const ambientSpeed = .15;
-  let position = 2;
+  const angleStep = 360 / count;
+  const ambientSpeed = -2.4;
+  let rotation = -2 * angleStep;
   let velocity = ambientSpeed;
   let targetVelocity = ambientSpeed;
   let cardWidth = 0;
+  let radius = 0;
   let frame;
   let drag;
   let lastFrame = performance.now();
   let hoverDirection = 0;
   let running = false;
+  let activeIndex = -1;
 
   /*
    * Previous fan-style coverflow, intentionally retained as a commented reference:
@@ -72,40 +76,22 @@ if (heroRail && heroCards.length) {
    *
    * The active implementation below places every card on one continuous cylinder.
    */
-  function settings() {
-    const compact = window.innerWidth <= 560;
-    return compact
-      ? { radius: cardWidth * 1.9, visibleAngle: 70, fadeAngle: 30, perspective: cardWidth * 6 }
-      : { radius: cardWidth * 2.45, visibleAngle: 82, fadeAngle: 40, perspective: cardWidth * 7 };
+  function normalizeAngle(angle) {
+    return ((angle + 180) % 360 + 360) % 360 - 180;
   }
 
   function paint() {
-    if (!cardWidth) return;
-    const visual = settings();
-    const angleStep = 360 / count;
-    heroRail.style.perspective = `${visual.perspective}px`;
-
+    heroCylinder.style.transform = `translateX(-50%) rotateY(${rotation}deg)`;
+    const nextActive = Math.round(-rotation / angleStep);
+    const normalizedIndex = ((nextActive % count) + count) % count;
+    if (normalizedIndex === activeIndex) return;
+    activeIndex = normalizedIndex;
     heroCards.forEach((card, index) => {
-      let offset = index - position;
-      offset = ((offset % count) + count) % count;
-      if (offset > count / 2) offset -= count;
-
-      const angle = offset * angleStep;
-      const absoluteAngle = Math.abs(angle);
-      const radians = angle * Math.PI / 180;
-      const x = Math.sin(radians) * visual.radius;
-      const z = (Math.cos(radians) - 1) * visual.radius;
-      const fadeRange = visual.visibleAngle - visual.fadeAngle;
-      const edgeProgress = Math.max(0, Math.min(1, (absoluteAngle - visual.fadeAngle) / fadeRange));
-      const opacity = absoluteAngle >= visual.visibleAngle ? 0 : 1 - edgeProgress * edgeProgress;
-
-      card.style.transform = `translateX(calc(-50% + ${x}px)) translateZ(${z}px) rotateY(${angle}deg)`;
-      card.style.opacity = String(opacity);
-      card.style.filter = edgeProgress > 0 ? `blur(${edgeProgress * 6}px) saturate(${1 - edgeProgress * .16})` : 'none';
-      card.style.zIndex = String(1000 + Math.round(z));
-      card.style.pointerEvents = absoluteAngle < visual.fadeAngle ? 'auto' : 'none';
-      card.classList.toggle('is-active', absoluteAngle < angleStep * .52);
-      card.setAttribute('aria-hidden', String(absoluteAngle >= visual.visibleAngle));
+      const relative = normalizeAngle(index * angleStep + rotation);
+      const visible = Math.abs(relative) < 88;
+      card.classList.toggle('is-active', index === activeIndex);
+      card.setAttribute('aria-hidden', String(!visible));
+      card.style.pointerEvents = Math.abs(relative) < 58 ? 'auto' : 'none';
     });
   }
 
@@ -117,8 +103,7 @@ if (heroRail && heroCards.length) {
     if (!drag) {
       const blend = 1 - Math.exp(-delta * 5.5);
       velocity += (targetVelocity - velocity) * blend;
-      position += velocity * delta;
-      if (Math.abs(position) > count * 100) position %= count;
+      rotation = normalizeAngle(rotation + velocity * delta);
       paint();
     }
 
@@ -126,7 +111,7 @@ if (heroRail && heroCards.length) {
   }
 
   function startMotion() {
-    if (running || reduceMotion.matches || document.hidden) return;
+    if (running || reduceMotion.matches) return;
     running = true;
     lastFrame = performance.now();
     frame = requestAnimationFrame(tick);
@@ -140,6 +125,11 @@ if (heroRail && heroCards.length) {
 
   function measure() {
     cardWidth = heroCards[0].offsetWidth;
+    const facePitch = cardWidth + (window.innerWidth <= 560 ? 12 : 16);
+    radius = (facePitch * count) / (2 * Math.PI);
+    heroCards.forEach((card, index) => {
+      card.style.transform = `translate(-50%, -50%) rotateY(${index * angleStep}deg) translateZ(${radius}px)`;
+    });
     paint();
   }
 
@@ -154,7 +144,7 @@ if (heroRail && heroCards.length) {
     clearHover();
     if (!direction || reduceMotion.matches || drag) return;
     hoverDirection = direction;
-    targetVelocity = direction * .48;
+    targetVelocity = direction * 8.5;
     heroRail.dataset.direction = direction > 0 ? 'forward' : 'backward';
   }
 
@@ -167,7 +157,7 @@ if (heroRail && heroCards.length) {
     clearHover();
     heroRail.setPointerCapture(event.pointerId);
     heroRail.dataset.dragging = 'true';
-    drag = { id: event.pointerId, x: event.clientX, position, velocity: 0, time: performance.now() };
+    drag = { id: event.pointerId, x: event.clientX, rotation, velocity: 0, time: performance.now() };
   });
   heroRail.addEventListener('pointermove', event => {
     if (!drag || drag.id !== event.pointerId) {
@@ -178,22 +168,21 @@ if (heroRail && heroCards.length) {
       return;
     }
 
-    const pitch = (2 * Math.PI * settings().radius) / count;
     const now = performance.now();
-    const previous = position;
-    position = drag.position - (event.clientX - drag.x) / pitch;
-    drag.velocity = ((position - previous) / Math.max(now - drag.time, 1)) * 1000;
+    const previous = rotation;
+    rotation = drag.rotation + ((event.clientX - drag.x) / Math.max(radius, 1)) * (180 / Math.PI);
+    drag.velocity = (normalizeAngle(rotation - previous) / Math.max(now - drag.time, 1)) * 1000;
     drag.time = now;
     paint();
   });
 
   function endDrag(event) {
     if (!drag || drag.id !== event.pointerId) return;
-    velocity = Math.max(-1.5, Math.min(1.5, drag.velocity));
+    velocity = reduceMotion.matches ? 0 : Math.max(-52, Math.min(52, drag.velocity));
     drag = undefined;
     heroRail.removeAttribute('data-dragging');
     if (heroRail.hasPointerCapture(event.pointerId)) heroRail.releasePointerCapture(event.pointerId);
-    targetVelocity = ambientSpeed;
+    targetVelocity = reduceMotion.matches ? 0 : ambientSpeed;
   }
 
   heroRail.addEventListener('pointerup', endDrag);
@@ -201,7 +190,7 @@ if (heroRail && heroCards.length) {
   heroRail.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
-    position = Math.round(position) + (event.key === 'ArrowRight' ? 1 : -1);
+    rotation -= event.key === 'ArrowRight' ? angleStep : -angleStep;
     velocity = 0;
     paint();
   });
