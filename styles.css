@@ -124,6 +124,10 @@ button{font:inherit}
   .hero-rail{--card-size:210px}
 }
 
+@media(min-width:561px) and (max-width:900px) and (min-height:800px){
+  .hero{padding-top:clamp(180px,30dvh,300px)}
+}
+
 @media(max-width:560px){
   .shell{width:min(100% - 32px,460px)}
   .header-inner{height:64px}
