@@ -74,7 +74,6 @@ if (heroRail && heroCylinder && heroCards.length) {
   let lastPointerX = 0;
   let running = false;
   let onScreen = false;
-  let activeIndex = -1;
 
   /*
    * Previous fan-style coverflow, intentionally retained as a commented reference:
@@ -89,15 +88,13 @@ if (heroRail && heroCylinder && heroCards.length) {
   }
 
   function paint() {
-    heroCylinder.style.transform = `translateX(-50%) scale3d(${ringScale}, ${ringScale}, ${ringScale}) rotateY(${rotation}deg)`;
+    heroCylinder.style.transform = `translateX(-50%) scale3d(${ringScale}, ${ringScale}, ${ringScale}) rotateX(-7deg) rotateY(${rotation}deg)`;
     const nextActive = Math.round(-rotation / angleStep);
     const normalizedIndex = ((nextActive % count) + count) % count;
-    if (normalizedIndex === activeIndex) return;
-    activeIndex = normalizedIndex;
     heroCards.forEach((card, index) => {
       const relative = normalizeAngle(index * angleStep + rotation);
       const visible = Math.abs(relative) < 88;
-      card.classList.toggle('is-active', index === activeIndex);
+      card.classList.toggle('is-active', index === normalizedIndex);
       card.classList.toggle('is-side', Math.abs(relative) > 50 && Math.abs(relative) <= 90);
       card.classList.toggle('is-back', Math.abs(relative) > 90);
       card.setAttribute('aria-hidden', String(!visible));
