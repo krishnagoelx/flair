@@ -88,7 +88,7 @@ if (heroRail && heroCylinder && heroCards.length) {
   }
 
   function paint() {
-    heroCylinder.style.transform = `translateX(-50%) scale3d(${ringScale}, ${ringScale}, ${ringScale}) rotateX(-7deg) rotateY(${rotation}deg)`;
+    heroCylinder.style.transform = `translateX(-50%) scale3d(${ringScale}, ${ringScale}, ${ringScale}) rotateY(${rotation}deg)`;
     const nextActive = Math.round(-rotation / angleStep);
     const normalizedIndex = ((nextActive % count) + count) % count;
     heroCards.forEach((card, index) => {
