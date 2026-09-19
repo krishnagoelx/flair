@@ -29,8 +29,8 @@ button{font:inherit}
 .hero-copy{max-width:1180px;margin-bottom:clamp(28px,4dvh,48px)}
 .hero h1{max-width:960px;margin:0 auto;font-size:clamp(52px,4.7vw,68px);font-weight:500;line-height:.98;letter-spacing:-.052em;text-wrap:balance}
 .hero h1 span{display:block}
-.hero-copy>p{max-width:720px;margin:12px auto 0;color:var(--muted);font-size:17px;line-height:1.47;letter-spacing:-.014em;text-wrap:balance}
-.hero-actions{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:16px}
+.hero-copy>p{max-width:720px;margin:28px auto 0;color:var(--muted);font-size:17px;line-height:1.47;letter-spacing:-.014em;text-wrap:balance}
+.hero-actions{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:28px}
 .button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 22px;border:1px solid transparent;border-radius:10px;font-size:15px;font-weight:500;transition:transform 160ms var(--ease-out),background-color 160ms var(--ease-out),color 160ms var(--ease-out)}
 .button-dark{background:var(--ink);color:#fff}
 .button-dark:hover{background:#363636}
