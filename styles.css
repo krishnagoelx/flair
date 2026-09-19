@@ -106,7 +106,7 @@ button{font:inherit}
   .hero{padding-top:clamp(54px,10dvh,108px)}
   .hero h1{max-width:720px;font-size:clamp(46px,7vw,58px)}
   .hero-copy>p{max-width:660px;font-size:16px}
-  .hero-rail{--card-size:clamp(168px,min(24vw,24dvh),200px);height:calc(var(--card-size)*1.62)}
+  .hero-rail{--card-size:clamp(168px,min(24vw,24dvh),200px);height:calc(var(--card-size)*1.75)}
   .feature-section{padding:8px}
   .feature-card{padding:72px 32px}
   .feature-layout{grid-template-columns:1fr;gap:42px;width:min(100%,760px)}
@@ -137,7 +137,7 @@ button{font:inherit}
   .hero-actions{gap:17px;margin-top:23px}
   .button{min-height:44px;padding-inline:16px;font-size:14px}
   .text-link{font-size:14px}
-  .hero-rail{--card-size:clamp(124px,min(calc(47.3vw - 21px),calc(32.3dvh - 59px)),160px);height:calc(var(--card-size)*1.65)}
+  .hero-rail{--card-size:clamp(124px,min(calc(47.3vw - 21px),calc(32.3dvh - 59px)),160px);height:calc(var(--card-size)*1.8)}
   .hero-rail::before,.hero-rail::after{width:34px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
   .hero-card{border-radius:12px}
   .hero-card div{padding:12px}
