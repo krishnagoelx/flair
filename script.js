@@ -29,6 +29,7 @@ function updateFeatureProgress() {
     const rawProgress = Math.max(0, Math.min(1, (start - bounds.top) / (bounds.height + start - finish)));
     const progress = previousBarComplete ? rawProgress : 0;
     trigger.style.setProperty('--progress', progress.toFixed(3));
+    trigger.classList.toggle('has-progress', progress > 0);
     previousBarComplete &&= rawProgress === 1;
   });
 }
