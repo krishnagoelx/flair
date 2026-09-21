@@ -64,11 +64,11 @@ button{font:inherit}
 .feature-layout{display:grid;grid-template-columns:minmax(470px,.82fr) minmax(0,1.18fr);gap:64px;align-items:start;width:100%;max-width:1344px;margin-inline:auto}
 .feature-copy{position:sticky;top:112px}
 .feature-copy h2{max-width:470px;margin:0;font-size:clamp(38px,3.5vw,52px);font-weight:500;line-height:1.04;letter-spacing:-.052em;text-wrap:balance}
-.feature-list{position:relative;display:grid;margin-top:34px}
-.feature-indicator{position:absolute;right:0;left:0;z-index:1;height:2px;background:#f8f8f5;pointer-events:none;transform:translateY(0);transition:transform 260ms var(--ease-out)}
+.feature-list{display:grid;margin-top:34px}
 .feature-trigger{position:relative;width:100%;padding:18px 0;border:0;border-bottom:1px solid #3a3a38;background:transparent;color:#f8f8f5;text-align:left;cursor:pointer}
 .feature-trigger span{display:block;font-size:17px;font-weight:500;line-height:1.25;letter-spacing:-.022em;transition:opacity 160ms var(--ease-out)}
 .feature-trigger small{display:block;width:100%;max-height:0;margin-top:0;overflow:hidden;color:#b8b8b2;font-size:12px;line-height:1.45;opacity:0;transform:translateY(-4px);transition:opacity 180ms var(--ease-out),max-height 220ms var(--ease-out),margin-top 220ms var(--ease-out),transform 180ms var(--ease-out)}
+.feature-trigger::after{position:absolute;right:0;bottom:-1px;left:0;height:2px;content:"";background:#f8f8f5;transform:scaleX(var(--progress,0));transform-origin:left;transition:transform 90ms linear}
 .feature-trigger.is-active small{max-height:38px;margin-top:8px;opacity:1;transform:translateY(0)}
 .feature-trigger:not(.is-active) span{opacity:.5}
 .feature-stage{display:grid;gap:20px;color:#fff}
@@ -122,8 +122,8 @@ button{font:inherit}
 
   .feature-layout{display:block}
   .feature-list{display:block;margin-top:30px}
-  .feature-indicator{display:none}
   .feature-list .feature-trigger{padding:0 0 14px;border-bottom:0;cursor:default}
+  .feature-list .feature-trigger::after{display:none}
   .feature-list .feature-trigger span,.feature-list .feature-trigger:not(.is-active) span{opacity:1}
   .feature-list .feature-trigger small,.feature-list .feature-trigger.is-active small{max-height:none;margin-top:7px;overflow:visible;opacity:1;transform:none}
   .feature-list .feature-view{min-height:460px;margin:0 0 38px}

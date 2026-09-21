@@ -3,7 +3,6 @@ const featureViews = [...document.querySelectorAll('[data-view]')];
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const featureList = document.querySelector('.feature-list');
 const featureStage = document.querySelector('.feature-stage');
-const featureIndicator = document.querySelector('.feature-indicator');
 const mobileFeatureLayout = window.matchMedia('(max-width: 900px)');
 
 function arrangeFeatureFlow() {
@@ -18,11 +17,17 @@ function arrangeFeatureFlow() {
   featureViews.forEach(view => featureStage.append(view));
 }
 
-function placeFeatureIndicator() {
-  if (!featureIndicator || mobileFeatureLayout.matches) return;
-  const active = featureTriggers.find(trigger => trigger.classList.contains('is-active'));
-  if (!active) return;
-  featureIndicator.style.transform = `translateY(${active.offsetTop + active.offsetHeight - 2}px)`;
+function updateFeatureProgress() {
+  if (mobileFeatureLayout.matches) return;
+  const start = window.innerHeight * .68;
+  const finish = window.innerHeight * .32;
+  featureViews.forEach(view => {
+    const trigger = featureTriggers.find(item => item.dataset.feature === view.dataset.view);
+    if (!trigger) return;
+    const bounds = view.getBoundingClientRect();
+    const progress = Math.max(0, Math.min(1, (start - bounds.top) / (bounds.height + start - finish)));
+    trigger.style.setProperty('--progress', progress.toFixed(3));
+  });
 }
 
 function showFeature(name) {
@@ -35,15 +40,15 @@ function showFeature(name) {
   featureViews.forEach(view => {
     view.classList.toggle('is-active', view.dataset.view === name);
   });
-  requestAnimationFrame(placeFeatureIndicator);
-  window.setTimeout(placeFeatureIndicator, 240);
 }
 
 arrangeFeatureFlow();
 mobileFeatureLayout.addEventListener('change', () => {
   arrangeFeatureFlow();
-  requestAnimationFrame(placeFeatureIndicator);
+  requestAnimationFrame(updateFeatureProgress);
 });
+window.addEventListener('scroll', updateFeatureProgress, { passive: true });
+window.addEventListener('resize', updateFeatureProgress);
 
 featureTriggers.forEach((trigger, index) => {
   trigger.addEventListener('click', () => {
@@ -80,6 +85,7 @@ if ('IntersectionObserver' in window) {
 }
 
 showFeature('products');
+updateFeatureProgress();
 
 const heroRail = document.querySelector('.hero-rail');
 const heroCylinder = document.querySelector('.hero-cylinder');
