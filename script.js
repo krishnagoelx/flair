@@ -1,6 +1,29 @@
 const featureTriggers = [...document.querySelectorAll('[data-feature]')];
 const featureViews = [...document.querySelectorAll('[data-view]')];
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const featureList = document.querySelector('.feature-list');
+const featureStage = document.querySelector('.feature-stage');
+const featureIndicator = document.querySelector('.feature-indicator');
+const mobileFeatureLayout = window.matchMedia('(max-width: 900px)');
+
+function arrangeFeatureFlow() {
+  if (!featureList || !featureStage) return;
+  if (mobileFeatureLayout.matches) {
+    featureTriggers.forEach(trigger => {
+      const view = document.querySelector(`[data-view="${trigger.dataset.feature}"]`);
+      if (view) trigger.after(view);
+    });
+    return;
+  }
+  featureViews.forEach(view => featureStage.append(view));
+}
+
+function placeFeatureIndicator() {
+  if (!featureIndicator || mobileFeatureLayout.matches) return;
+  const active = featureTriggers.find(trigger => trigger.classList.contains('is-active'));
+  if (!active) return;
+  featureIndicator.style.transform = `translateY(${active.offsetTop + active.offsetHeight - 2}px)`;
+}
 
 function showFeature(name) {
   featureTriggers.forEach(trigger => {
@@ -12,16 +35,26 @@ function showFeature(name) {
   featureViews.forEach(view => {
     view.classList.toggle('is-active', view.dataset.view === name);
   });
+  requestAnimationFrame(placeFeatureIndicator);
+  window.setTimeout(placeFeatureIndicator, 240);
 }
+
+arrangeFeatureFlow();
+mobileFeatureLayout.addEventListener('change', () => {
+  arrangeFeatureFlow();
+  requestAnimationFrame(placeFeatureIndicator);
+});
 
 featureTriggers.forEach((trigger, index) => {
   trigger.addEventListener('click', () => {
     const name = trigger.dataset.feature;
     showFeature(name);
-    document.querySelector(`[data-view="${name}"]`)?.scrollIntoView({
-      behavior: reduceMotion.matches ? 'auto' : 'smooth',
-      block: 'center',
-    });
+    if (!mobileFeatureLayout.matches) {
+      document.querySelector(`[data-view="${name}"]`)?.scrollIntoView({
+        behavior: reduceMotion.matches ? 'auto' : 'smooth',
+        block: 'center',
+      });
+    }
   });
   trigger.addEventListener('keydown', event => {
     if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
