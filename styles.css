@@ -55,9 +55,8 @@ button{font:inherit}
 .hero-card h2{margin:auto 0 0;font-size:18px;font-weight:500;line-height:1.06;letter-spacing:-.035em;transition:opacity 180ms var(--ease-out)}
 .hero-card span{display:block;margin-top:7px;color:rgba(255,255,255,.82);font-size:10px;line-height:1.28;transition:opacity 180ms var(--ease-out)}
 .hero-card:not(.is-active) h2,.hero-card:not(.is-active) span{opacity:0}
-.hero-card.is-active{z-index:2;box-shadow:0 24px 52px rgba(22,22,22,.18)}
-.hero-card.is-side{filter:blur(1.8px);opacity:.56}
-.hero-card.is-back{filter:blur(3px);opacity:.22}
+.hero-card.is-side{filter:blur(1.4px);opacity:.66}
+.hero-card.is-back{filter:blur(3px);opacity:.28}
 .hero-card.is-back div{opacity:0}
 
 .feature-section{padding:8px;background:var(--paper);color:#f8f8f5}

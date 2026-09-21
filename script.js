@@ -146,7 +146,7 @@ if (heroRail && heroCylinder && heroCards.length) {
 
   function measure() {
     cardWidth = heroCards[0].offsetWidth;
-    radius = cardWidth * 2.55;
+    radius = cardWidth * 3.02;
     const perspective = Number.parseFloat(getComputedStyle(heroRail).perspective) || 1500;
     ringScale = perspective / (perspective + radius);
     heroCards.forEach((card, index) => {
