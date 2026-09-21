@@ -21,12 +21,15 @@ function updateFeatureProgress() {
   if (mobileFeatureLayout.matches) return;
   const start = window.innerHeight * .68;
   const finish = window.innerHeight * .32;
+  let previousBarComplete = true;
   featureViews.forEach(view => {
     const trigger = featureTriggers.find(item => item.dataset.feature === view.dataset.view);
     if (!trigger) return;
     const bounds = view.getBoundingClientRect();
-    const progress = Math.max(0, Math.min(1, (start - bounds.top) / (bounds.height + start - finish)));
+    const rawProgress = Math.max(0, Math.min(1, (start - bounds.top) / (bounds.height + start - finish)));
+    const progress = previousBarComplete ? rawProgress : 0;
     trigger.style.setProperty('--progress', progress.toFixed(3));
+    previousBarComplete &&= rawProgress === 1;
   });
 }
 
